@@ -1,0 +1,25 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Dataset folders (large image data)
+Images/
+sorted_dataset/
+balanced_dataset/
+pseudo_labeled_dataset/
+expanded_dataset/
+
+# Large model checkpoints (>100MB causes GitHub push failure)
+vgg16_embryo_best.pth
+*.tar.gz
+*.zip
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

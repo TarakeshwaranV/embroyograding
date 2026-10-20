@@ -6,9 +6,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset, Dataset
 from torchvision import datasets, transforms, models
-from torchvision.models import EfficientNet_B0_Weights, ResNet50_Weights
+from torchvision.models import EfficientNet_B0_Weights
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, cohen_kappa_score
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image, ImageOps, ImageEnhance
@@ -34,14 +34,13 @@ class CLAHETransform:
             rgb = cv2.cvtColor(lab, cv2.COLOR_LAB2RGB)
             return Image.fromarray(rgb)
         else:
-            # Fallback high-quality adaptive contrast using PIL
             img = ImageOps.autocontrast(img, cutoff=1)
             enhancer = ImageEnhance.Contrast(img)
             return enhancer.enhance(1.15)
 
 class OrdinalSoftCrossEntropyLoss(nn.Module):
     """
-    Ordinal label smoothing for medical staging (Grade-1 < Grade-2 < Grade-3).
+    Ordinal soft cross-entropy for embryo staging (Grade-1 < Grade-2 < Grade-3).
     Penalizes extreme errors (Grade-1 -> Grade-3) more heavily than adjacent grades.
     """
     def __init__(self, num_classes=3, smoothing=0.15):
@@ -53,11 +52,6 @@ class OrdinalSoftCrossEntropyLoss(nn.Module):
     def forward(self, logits, targets):
         log_probs = self.log_softmax(logits)
         batch_size = targets.size(0)
-        
-        # Build ordinal soft target distributions
-        # Grade 0: [1 - s, s, 0]
-        # Grade 1: [s/2, 1 - s, s/2]
-        # Grade 2: [0, s, 1 - s]
         target_dist = torch.zeros_like(logits)
         for i in range(batch_size):
             y = targets[i].item()
@@ -75,13 +69,13 @@ class OrdinalSoftCrossEntropyLoss(nn.Module):
         loss = -(target_dist * log_probs).sum(dim=1).mean()
         return loss
 
-def get_transforms(img_size=384):
+def get_transforms(img_size=288):
     train_transform = transforms.Compose([
         transforms.Resize((img_size, img_size)),
         CLAHETransform(),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomVerticalFlip(p=0.5),
-        transforms.RandomRotation(degrees=30),
+        transforms.RandomRotation(degrees=25),
         transforms.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.1),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -109,20 +103,20 @@ class TransformedDataset(Dataset):
     def __len__(self):
         return len(self.subset)
 
-def build_efficientnet_b0(num_classes=3, device="cuda"):
-    print("Loading Pretrained EfficientNet-B0 (ImageNet weights with Squeeze-and-Excitation)...")
+def build_efficientnet(num_classes=3, device="cuda"):
+    print("Loading Pretrained EfficientNet-B0 (ImageNet weights)...")
     model = models.efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
     in_features = model.classifier[1].in_features
     model.classifier = nn.Sequential(
         nn.Dropout(p=0.4),
         nn.Linear(in_features, 256),
-        nn.SiLU(),  # Swish activation native to EfficientNet
+        nn.SiLU(),
         nn.Dropout(p=0.2),
         nn.Linear(256, num_classes)
     )
     return model.to(device)
 
-def train_advanced_model(model, train_loader, val_loader, class_names, epochs=25, lr=2e-4, device="cuda"):
+def train_efficientnet(model, train_loader, val_loader, class_names, epochs=20, lr=3e-4, device="cuda"):
     criterion = OrdinalSoftCrossEntropyLoss(num_classes=len(class_names), smoothing=0.15)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=1e-3)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
@@ -133,7 +127,7 @@ def train_advanced_model(model, train_loader, val_loader, class_names, epochs=25
     history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 
     print("\n" + "=" * 65)
-    print("Training EfficientNet-B0 with CLAHE, Ordinal Loss & Cosine LR on GPU")
+    print("Training EfficientNet-B0 on Expanded & Balanced Embryo Dataset")
     print("=" * 65)
     start_time = time.time()
 
@@ -217,20 +211,19 @@ def train_advanced_model(model, train_loader, val_loader, class_names, epochs=25
     model.load_state_dict(best_model_wts)
     return model, history
 
-def evaluate_with_tta(model, val_dataset, class_names, device="cuda"):
-    """Evaluates the model with Test-Time Augmentation (TTA) for maximum accuracy."""
+def evaluate_with_tta(model, val_dataset, class_names, img_size=288, device="cuda"):
     model.eval()
-    all_preds_standard = []
+    all_preds_std = []
     all_preds_tta = []
     all_labels = []
     all_probs_tta = []
 
     print("\n" + "=" * 65)
-    print("Running Test-Time Augmentation (TTA) Evaluation")
+    print("Evaluating Model with Test-Time Augmentation (TTA)")
     print("=" * 65)
 
     base_t = transforms.Compose([
-        transforms.Resize((384, 384)),
+        transforms.Resize((img_size, img_size)),
         CLAHETransform(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -241,7 +234,6 @@ def evaluate_with_tta(model, val_dataset, class_names, device="cuda"):
             img, label = val_dataset.subset[i]
             all_labels.append(label)
 
-            # TTA Views: Original, H-Flip, V-Flip, Rot90
             views = [
                 img,
                 img.transpose(Image.FLIP_LEFT_RIGHT),
@@ -258,33 +250,35 @@ def evaluate_with_tta(model, val_dataset, class_names, device="cuda"):
 
             probs = torch.softmax(outs, dim=1).mean(dim=0).cpu().numpy()
             pred_tta = np.argmax(probs)
-            pred_standard = torch.softmax(outs[0:1], dim=1).cpu().numpy()[0].argmax()
+            pred_std = torch.softmax(outs[0:1], dim=1).cpu().numpy()[0].argmax()
 
-            all_preds_standard.append(pred_standard)
+            all_preds_std.append(pred_std)
             all_preds_tta.append(pred_tta)
             all_probs_tta.append(probs)
 
     all_labels = np.array(all_labels)
-    all_preds_standard = np.array(all_preds_standard)
+    all_preds_std = np.array(all_preds_std)
     all_preds_tta = np.array(all_preds_tta)
     all_probs_tta = np.array(all_probs_tta)
 
-    acc_std = accuracy_score(all_labels, all_preds_standard)
+    acc_std = accuracy_score(all_labels, all_preds_std)
     acc_tta = accuracy_score(all_labels, all_preds_tta)
     auc_ovr = roc_auc_score(all_labels, all_probs_tta, multi_class='ovr')
+    kappa = cohen_kappa_score(all_labels, all_preds_tta)
 
     print(f"Standard Single-View Accuracy: {acc_std * 100:.2f}%")
-    print(f"Test-Time Augmentation Accuracy: {acc_tta * 100:.2f}%  (+{(acc_tta - acc_std)*100:.2f}% boost!)")
-    print(f"TTA Multiclass ROC-AUC (OvR):   {auc_ovr * 100:.2f}%")
+    print(f"TTA Enhanced Accuracy:        {acc_tta * 100:.2f}%")
+    print(f"Multiclass ROC-AUC (OvR):     {auc_ovr * 100:.2f}%")
+    print(f"Cohen's Kappa Score:          {kappa:.4f}")
 
     print("\nClassification Report (with TTA):")
     print(classification_report(all_labels, all_preds_tta, target_names=class_names, digits=4))
 
     cm = confusion_matrix(all_labels, all_preds_tta)
-    print("Confusion Matrix (with TTA):")
+    print("Confusion Matrix:")
     print(cm)
 
-    # Plot enhanced confusion matrix
+    # Plot Confusion Matrix
     plt.figure(figsize=(6, 5))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Greens)
     plt.title('EfficientNet-B0 (TTA) Confusion Matrix')
@@ -301,19 +295,19 @@ def evaluate_with_tta(model, val_dataset, class_names, device="cuda"):
     plt.tight_layout()
     plt.ylabel('True Grade')
     plt.xlabel('Predicted Grade')
-    plt.savefig('confusion_matrix_advanced.png', dpi=300)
+    plt.savefig('confusion_matrix_efficientnet.png', dpi=300)
     plt.close()
-    print("Saved advanced confusion matrix to confusion_matrix_advanced.png")
+    print("Saved confusion matrix plot to: confusion_matrix_efficientnet.png")
 
     return acc_tta, all_probs_tta
 
-def plot_advanced_curves(history):
+def plot_training_curves(history):
     epochs = range(1, len(history['train_loss']) + 1)
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
     ax1.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
     ax1.plot(epochs, history['val_loss'], 'r--', label='Val Loss')
-    ax1.set_title('EfficientNet Training & Validation Loss (Ordinal Loss)')
+    ax1.set_title('EfficientNet-B0 Loss (Ordinal Loss)')
     ax1.set_xlabel('Epochs')
     ax1.set_ylabel('Loss')
     ax1.legend()
@@ -321,26 +315,27 @@ def plot_advanced_curves(history):
 
     ax2.plot(epochs, [a * 100 for a in history['train_acc']], 'b-', label='Train Acc')
     ax2.plot(epochs, [a * 100 for a in history['val_acc']], 'r--', label='Val Acc')
-    ax2.set_title('EfficientNet Accuracy (%) (CLAHE + 384x384)')
+    ax2.set_title('EfficientNet-B0 Accuracy (%)')
     ax2.set_xlabel('Epochs')
     ax2.set_ylabel('Accuracy (%)')
     ax2.legend()
     ax2.grid(True)
 
     plt.tight_layout()
-    plt.savefig('training_curves_advanced.png', dpi=300)
+    plt.savefig('training_curves_efficientnet.png', dpi=300)
     plt.close()
-    print("Saved training curves to training_curves_advanced.png")
+    print("Saved training curves to: training_curves_efficientnet.png")
 
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    print(f"Using compute device: {device}")
     if torch.cuda.is_available():
         print(f"Device Name: {torch.cuda.get_device_name(0)}")
         print(f"Available VRAM: {torch.cuda.get_device_properties(0).total_memory / (1024**3):.2f} GB")
 
     target_classes = ["Grade-1", "Grade-2", "Grade-3"]
-    data_dir = "balanced_dataset" if os.path.exists("balanced_dataset") else "sorted_dataset"
+    data_dir = "balanced_expanded_dataset" if os.path.exists("balanced_expanded_dataset") else "expanded_dataset"
+
     base_dataset = datasets.ImageFolder(root=data_dir)
     c2i = base_dataset.class_to_idx
 
@@ -359,8 +354,8 @@ def main():
 
     train_idx, val_idx = train_test_split(indices, test_size=0.2, stratify=targets, random_state=42)
 
-    # Resolution 384x384 with CLAHE
-    train_transform, val_transform = get_transforms(img_size=384)
+    img_size = 288
+    train_transform, val_transform = get_transforms(img_size=img_size)
 
     raw_train_subset = Subset(base_dataset, train_idx)
     raw_val_subset = Subset(base_dataset, val_idx)
@@ -368,26 +363,25 @@ def main():
     train_dataset = TransformedDataset(raw_train_subset, transform=train_transform)
     val_dataset = TransformedDataset(raw_val_subset, transform=val_transform)
 
-    # Batch size 16 with AMP fits well within RTX 2050 4GB VRAM
     train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True, num_workers=0, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False, num_workers=0, pin_memory=True)
 
-    print(f"Dataset: {len(train_dataset)} Train | {len(val_dataset)} Validation (Resolution: 384x384)")
+    print(f"Dataset Loaded: {len(train_dataset)} Train | {len(val_dataset)} Val (Resolution: {img_size}x{img_size})")
 
-    model = build_efficientnet_b0(num_classes=3, device=device)
-    model, history = train_advanced_model(
+    model = build_efficientnet(num_classes=3, device=device)
+    model, history = train_efficientnet(
         model=model,
         train_loader=train_loader,
         val_loader=val_loader,
         class_names=target_classes,
-        epochs=25,
-        lr=2e-4,
+        epochs=20,
+        lr=3e-4,
         device=device
     )
 
-    evaluate_with_tta(model, val_dataset, target_classes, device=device)
-    plot_advanced_curves(history)
-    print("\nAdvanced training pipeline completed successfully!")
+    evaluate_with_tta(model, val_dataset, target_classes, img_size=img_size, device=device)
+    plot_training_curves(history)
+    print("\nAll training and evaluation steps successfully completed!")
 
 if __name__ == "__main__":
     main()

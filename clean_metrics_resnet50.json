@@ -1,0 +1,41 @@
+{
+  "model": "resnet50",
+  "num_samples": 324,
+  "num_patients": 133,
+  "overall_accuracy": 0.49382716049382713,
+  "balanced_accuracy": 0.5058309541068161,
+  "macro_precision": 0.49153439153439155,
+  "macro_recall": 0.5058309541068161,
+  "macro_f1": 0.48923028397020213,
+  "quadratic_weighted_kappa": 0.40807871569135157,
+  "macro_roc_auc": 0.6287169419944195,
+  "fold_accuracies": [
+    0.53125,
+    0.4307692307692308,
+    0.5384615384615384,
+    0.5,
+    0.46875
+  ],
+  "fold_mean_accuracy": 0.4938461538461539,
+  "fold_std_accuracy": 0.04008981226368211,
+  "per_class": {
+    "Grade-1": {
+      "precision": 0.5222222222222223,
+      "recall": 0.5402298850574713,
+      "f1": 0.5310734463276836,
+      "support": 87
+    },
+    "Grade-2": {
+      "precision": 0.4523809523809524,
+      "recall": 0.30158730158730157,
+      "f1": 0.3619047619047619,
+      "support": 126
+    },
+    "Grade-3": {
+      "precision": 0.5,
+      "recall": 0.6756756756756757,
+      "f1": 0.5747126436781609,
+      "support": 111
+    }
+  }
+}

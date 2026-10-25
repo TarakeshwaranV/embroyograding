@@ -17,6 +17,7 @@ balanced_expanded_dataset/
 # Large model checkpoints (>100MB causes GitHub push failure)
 vgg16_embryo_best.pth
 best_clean_vgg16.pth
+embryo_experiments_v2/checkpoints/*resnet*.pth
 *.tar.gz
 *.zip
 

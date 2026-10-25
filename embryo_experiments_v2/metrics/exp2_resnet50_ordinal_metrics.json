@@ -1,0 +1,50 @@
+{
+  "exp_id": "exp2_resnet50_ordinal",
+  "arch_name": "resnet50",
+  "img_size": 224,
+  "preprocessing": "Standard RGB",
+  "loss_type": "ordinal",
+  "probe_epochs": 5,
+  "finetune_epochs": 15,
+  "head_lr": 0.001,
+  "finetune_lr": 0.0001,
+  "batch_size": 16,
+  "duration_seconds": 541.33,
+  "gpu_error": null,
+  "overall_accuracy": 0.5046439628482973,
+  "balanced_accuracy": 0.48479403541472504,
+  "macro_precision": 0.557938214221893,
+  "macro_recall": 0.48479403541472504,
+  "macro_f1": 0.4907119629394132,
+  "quadratic_weighted_kappa": 0.40194646296416914,
+  "macro_roc_auc": 0.6443986469755688,
+  "fold_accuracies": [
+    0.53125,
+    0.4461538461538462,
+    0.5230769230769231,
+    0.48484848484848486,
+    0.5396825396825397
+  ],
+  "fold_mean_accuracy": 0.5050023587523588,
+  "fold_std_accuracy": 0.03489317860077616,
+  "per_class": {
+    "Grade-1": {
+      "precision": 0.6842105263157895,
+      "recall": 0.2988505747126437,
+      "f1": 0.416,
+      "support": 87
+    },
+    "Grade-2": {
+      "precision": 0.43820224719101125,
+      "recall": 0.624,
+      "f1": 0.5148514851485149,
+      "support": 125
+    },
+    "Grade-3": {
+      "precision": 0.5514018691588785,
+      "recall": 0.5315315315315315,
+      "f1": 0.5412844036697247,
+      "support": 111
+    }
+  }
+}

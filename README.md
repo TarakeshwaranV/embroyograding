@@ -26,10 +26,13 @@ All experiments evaluate 5-Fold Patient-Isolated Out-of-Fold (OOF) performance o
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Exp 1** | ResNet-50 | Standard RGB | Cross-Entropy | 50.46% | 51.00% | 50.43% | 0.4033 | 64.54% |
 | **Exp 2** | ResNet-50 | Standard RGB | Ordinal Soft Loss | 50.46% | 48.48% | 49.07% | 0.4019 | 64.44% |
-| **Exp 3** | ResNet-50 | **CLAHE** | Cross-Entropy | **52.63%** | **52.88%** | **52.75%** | **0.4437** | **66.58%** |
-| **Exp 4** | EfficientNet-B0 | Standard RGB | Cross-Entropy | 52.32% | 52.46% | 52.49% | **0.4698** | 65.18% |
+| **Exp 3** | ResNet-50 | **CLAHE** | Cross-Entropy | 52.63% | 52.88% | 52.75% | 0.4437 | 66.58% |
+| **Exp 4** | EfficientNet-B0 | Standard RGB | Cross-Entropy | 52.32% | 52.46% | 52.49% | 0.4698 | 65.18% |
 | **Exp 5** | ResNet-18 | Standard RGB | Cross-Entropy | 50.15% | 50.08% | 50.11% | 0.3961 | 64.52% |
-| **Exp 6 (Ensemble)** | **ResNet-50 + EffNet-B0** | **Hybrid (CLAHE + RGB)** | **Cross-Entropy** | **52.63%** | **53.31%** | **53.08%** | **0.4975** | **67.91%** |
+| **Exp 6 (Ensemble)** | ResNet-50 + EffNet-B0 | Hybrid (CLAHE + RGB) | Cross-Entropy | 52.63% | 53.31% | 53.08% | 0.4975 | 67.91% |
+| **Exp 7 (Multi-Focal MIL)** | **Gated Attention MIL (R50+B0)** | **Hybrid (Multi-Focal Bags)** | **Cross-Entropy** | **61.65%** | **62.01%** | **61.61%** | **0.5139** | **72.61%** |
+
+*Clinical Binary Actionability with Multi-Focal MIL: **Top Quality (Grade 1 vs 2+3): 75.19% Acc (78.91% AUC)** | **Transferable (Grade 1+2 vs 3): 75.19% Acc (74.69% AUC)**.*
 
 *Note: In medical grading with only ~300 images across 3 ordered classes, theoretical random chance is 33.3%. Achieving ~53% accuracy with 0.4975 QWK and 67.9% ROC-AUC without patient leakage represents substantial clinical agreement.*
 

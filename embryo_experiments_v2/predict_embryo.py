@@ -98,35 +98,132 @@ def predict_ensemble(image_path, r50_ckpt='embryo_experiments_v2/checkpoints/bes
     }
     return result
 
+def predict_multi_focal_embryo(image_paths, ckpt_path='embryo_experiments_v2/checkpoints/best_exp7_mil_attention.pth'):
+    for p in image_paths:
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"Image slice not found: {p}")
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    from mil_attention_pipeline import FeatureExtractor, GatedAttentionAggregator
+
+    fe_r50 = FeatureExtractor('resnet50', os.path.join(base_dir, 'checkpoints', 'best_exp3_resnet50_clahe.pth'), use_clahe=True, device=device)
+    fe_eff = FeatureExtractor('efficientnet_b0', os.path.join(base_dir, 'checkpoints', 'best_exp4_effnet_b0.pth'), use_clahe=False, device=device)
+
+    # Extract hybrid slice features
+    feats = []
+    for p in image_paths:
+        f_r50 = fe_r50.extract_image(p)
+        f_eff = fe_eff.extract_image(p)
+        feats.append(np.concatenate([f_r50, f_eff]))
+
+    bag_tensor = torch.tensor(np.stack(feats, axis=0), dtype=torch.float32).to(device)
+
+    # Load MIL Attention Aggregator
+    model = GatedAttentionAggregator(in_features=3328, emb_dim=128, attn_dim=64, num_classes=3, dropout=0.0).to(device)
+    if os.path.exists(ckpt_path):
+        state = torch.load(ckpt_path, map_location=device, weights_only=True)
+        model.load_state_dict(state)
+    model.eval()
+
+    with torch.no_grad():
+        logits, attn = model(bag_tensor)
+        probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
+        attns = attn.cpu().numpy()
+        pred_idx = probs.argmax()
+
+    pred_grade = INV_GRADE_MAP[pred_idx]
+
+    result = {
+        'mode': 'Multi-Focal Gated Attention MIL',
+        'image_paths': [os.path.abspath(p) for p in image_paths],
+        'predicted_grade': pred_grade,
+        'model_architecture': 'Gated Attention MIL (ResNet50-CLAHE + EfficientNet-B0)',
+        'checkpoint_used': os.path.basename(ckpt_path),
+        'class_probabilities': {
+            'Grade-1 (Good)': float(probs[0]),
+            'Grade-2 (Fair)': float(probs[1]),
+            'Grade-3 (Poor)': float(probs[2])
+        },
+        'slice_attention': {os.path.basename(p): float(a) for p, a in zip(image_paths, attns)},
+        'clinical_notice': 'PROBABILITY ESTIMATES ARE EXPERIMENTAL AI PREDICTIONS, NOT CLINICALLY CALIBRATED DIAGNOSTIC METRICS.'
+    }
+    return result
+
 def main():
-    parser = argparse.ArgumentParser(description="Classify Blastocyst Embryo Image")
-    parser.add_argument('--image', type=str, required=True, help="Path to embryo image file (e.g. Images/0002_01.png)")
+    parser = argparse.ArgumentParser(description="Classify Blastocyst Embryo Image(s)")
+    parser.add_argument('--image', type=str, default=None, help="Path to single embryo image file (e.g. Images/0002_01.png)")
+    parser.add_argument('--images', nargs='+', default=None, help="Paths to multiple focal slices of an embryo (e.g. Images/0002_01.png Images/0002_02.png)")
     parser.add_argument('--model', type=str, default='embryo_experiments_v2/checkpoints/best_exp3_resnet50_clahe.pth', help="Path to checkpoint .pth file")
     parser.add_argument('--arch', type=str, default='resnet50', choices=['resnet50', 'efficientnet_b0', 'resnet18'])
     parser.add_argument('--ensemble', action='store_true', help="Use soft ensemble of ResNet-50 (CLAHE) + EfficientNet-B0")
+    parser.add_argument('--mil', action='store_true', help="Use Multi-Focal Gated Attention MIL across all provided slices")
     args = parser.parse_args()
 
-    if args.ensemble:
-        res = predict_ensemble(args.image)
-    else:
-        res = predict_single_image(args.image, model_path=args.model, arch_name=args.arch)
+    slice_list = args.images if args.images else ([args.image] if args.image else None)
+    if not slice_list:
+        parser.error("Please provide at least one image with --image or multiple with --images.")
 
-    print("\n" + "="*60)
-    print("      HUMAN BLASTOCYST QUALITY GRADING RESULT")
-    print("="*60)
-    print(f" Image:             {os.path.basename(res['image_path'])}")
-    print(f" Model Used:        {res['model_architecture'].upper()}")
-    print(f" Checkpoint:        {os.path.basename(res['checkpoint_used'])}")
-    print("-" * 60)
-    print(f" PREDICTED GRADE:   >>> {res['predicted_grade']} <<<")
-    print("-" * 60)
-    print(" Estimated Class Probabilities:")
-    for grade_name, prob in res['class_probabilities'].items():
-        bar = "#" * int(prob * 30)
-        print(f"   {grade_name:18s}: {prob*100:6.2f}% | {bar}")
-    print("="*60)
-    print(f" [!] Notice: {res['clinical_notice']}")
-    print("="*60 + "\n")
+    if args.mil or len(slice_list) > 1:
+        res = predict_multi_focal_embryo(slice_list)
+        print("\n" + "="*60)
+        print("      MULTI-FOCAL EMBRYO QUALITY GRADING (MIL)")
+        print("="*60)
+        print(f" Embryo Slices:     {len(res['image_paths'])} focal planes")
+        print(f" Model Used:        {res['model_architecture']}")
+        print(f" Checkpoint:        {res['checkpoint_used']}")
+        print("-" * 60)
+        print(f" PREDICTED GRADE:   >>> {res['predicted_grade']} <<<")
+        print("-" * 60)
+        print(" Estimated Embryo Probabilities:")
+        for grade_name, prob in res['class_probabilities'].items():
+            bar = "#" * int(prob * 30)
+            print(f"   {grade_name:18s}: {prob*100:6.2f}% | {bar}")
+        print("-" * 60)
+        print(" Slice-by-Slice Clinical Attention Weights:")
+        for fname, att in res['slice_attention'].items():
+            bar = "=" * int(att * 30)
+            print(f"   {fname:18s}: {att*100:6.2f}% attention | {bar}")
+        print("="*60)
+        print(f" [!] Notice: {res['clinical_notice']}")
+        print("="*60 + "\n")
+    elif args.ensemble:
+        res = predict_ensemble(slice_list[0])
+        print("\n" + "="*60)
+        print("      HUMAN BLASTOCYST QUALITY GRADING RESULT")
+        print("="*60)
+        print(f" Image:             {os.path.basename(res['image_path'])}")
+        print(f" Model Used:        {res['model_architecture'].upper()}")
+        print(f" Checkpoint:        {os.path.basename(res['checkpoint_used'])}")
+        print("-" * 60)
+        print(f" PREDICTED GRADE:   >>> {res['predicted_grade']} <<<")
+        print("-" * 60)
+        print(" Estimated Class Probabilities:")
+        for grade_name, prob in res['class_probabilities'].items():
+            bar = "#" * int(prob * 30)
+            print(f"   {grade_name:18s}: {prob*100:6.2f}% | {bar}")
+        print("="*60)
+        print(f" [!] Notice: {res['clinical_notice']}")
+        print("="*60 + "\n")
+    else:
+        res = predict_single_image(slice_list[0], model_path=args.model, arch_name=args.arch)
+        print("\n" + "="*60)
+        print("      HUMAN BLASTOCYST QUALITY GRADING RESULT")
+        print("="*60)
+        print(f" Image:             {os.path.basename(res['image_path'])}")
+        print(f" Model Used:        {res['model_architecture'].upper()}")
+        print(f" Checkpoint:        {os.path.basename(res['checkpoint_used'])}")
+        print("-" * 60)
+        print(f" PREDICTED GRADE:   >>> {res['predicted_grade']} <<<")
+        print("-" * 60)
+        print(" Estimated Class Probabilities:")
+        for grade_name, prob in res['class_probabilities'].items():
+            bar = "#" * int(prob * 30)
+            print(f"   {grade_name:18s}: {prob*100:6.2f}% | {bar}")
+        print("="*60)
+        print(f" [!] Notice: {res['clinical_notice']}")
+        print("="*60 + "\n")
 
 if __name__ == '__main__':
     main()

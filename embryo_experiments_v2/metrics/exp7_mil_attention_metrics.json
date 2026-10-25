@@ -1,0 +1,24 @@
+{
+  "exp_id": "exp7_mil_attention",
+  "arch_name": "Multi_Focal_Gated_Attention_MIL",
+  "resolution": "224x224",
+  "preprocessing": "Hybrid (ResNet50-CLAHE + EffNet-B0)",
+  "oof_accuracy": 0.6165413533834586,
+  "balanced_accuracy": 0.6200684658131467,
+  "macro_precision": 0.6158186864014801,
+  "macro_recall": 0.6200684658131467,
+  "macro_f1": 0.6160592281281936,
+  "cohen_qwk": 0.5138848044364156,
+  "multiclass_roc_auc": 0.7261025345458619,
+  "binary_top_quality_acc": 0.7518796992481203,
+  "binary_top_quality_auc": 0.7891156462585035,
+  "binary_transferable_acc": 0.7518796992481203,
+  "binary_transferable_auc": 0.7469356486210418,
+  "fold_accuracies": [
+    0.6,
+    0.6206896551724138,
+    0.64,
+    0.6153846153846154,
+    0.6086956521739131
+  ]
+}

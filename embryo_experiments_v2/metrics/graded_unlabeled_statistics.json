@@ -1,0 +1,32 @@
+{
+  "total_images_graded": 2020,
+  "total_patient_bags": 765,
+  "grade_breakdown": {
+    "Grade-1": {
+      "count": 425,
+      "pct": 21.03960396039604,
+      "mean_confidence": 47.12628612943971,
+      "median_confidence": 45.146445901074685,
+      "high_conf_gt_70_count": 16
+    },
+    "Grade-2": {
+      "count": 279,
+      "pct": 13.811881188118813,
+      "mean_confidence": 40.41495554845635,
+      "median_confidence": 39.950304747220216,
+      "high_conf_gt_70_count": 0
+    },
+    "Grade-3": {
+      "count": 1316,
+      "pct": 65.14851485148515,
+      "mean_confidence": 52.273742961553594,
+      "median_confidence": 51.20275938982155,
+      "high_conf_gt_70_count": 85
+    }
+  },
+  "known_cohort_overlap_test": {
+    "n_slices": 77,
+    "accuracy_vs_primary_gt": 38.961038961038966,
+    "mean_confidence": 51.00102258638437
+  }
+}

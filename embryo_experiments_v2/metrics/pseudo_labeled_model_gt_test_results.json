@@ -1,0 +1,46 @@
+{
+  "model": "ResNet-50 trained on Graded Novel Patient Data",
+  "training_samples": 1665,
+  "test_samples": 324,
+  "test_accuracy": 49.074074074074076,
+  "balanced_accuracy": 51.28823404685474,
+  "macro_precision": 49.73666590911117,
+  "macro_recall": 51.28823404685474,
+  "macro_f1": 49.147539645435856,
+  "quadratic_weighted_kappa": 0.43030251673586983,
+  "macro_roc_auc": 71.39454373410268,
+  "confusion_matrix": [
+    [
+      60,
+      20,
+      7
+    ],
+    [
+      56,
+      40,
+      30
+    ],
+    [
+      21,
+      31,
+      59
+    ]
+  ],
+  "per_class": {
+    "Grade-1": {
+      "precision": 43.79562043795621,
+      "recall": 68.96551724137932,
+      "f1": 53.57142857142857
+    },
+    "Grade-2": {
+      "precision": 43.956043956043956,
+      "recall": 31.746031746031743,
+      "f1": 36.86635944700461
+    },
+    "Grade-3": {
+      "precision": 61.458333333333336,
+      "recall": 53.153153153153156,
+      "f1": 57.00483091787439
+    }
+  }
+}

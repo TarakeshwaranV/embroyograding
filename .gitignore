@@ -13,6 +13,8 @@ balanced_dataset/
 pseudo_labeled_dataset/
 expanded_dataset/
 balanced_expanded_dataset/
+graded_remaining_dataset/
+graded_remaining_high_confidence/
 
 # Large model checkpoints (>100MB causes GitHub push failure)
 vgg16_embryo_best.pth

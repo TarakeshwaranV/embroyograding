@@ -1,0 +1,44 @@
+{
+  "pipeline": "Scientifically Proven Full-Scale Enhanced Super-Ensemble",
+  "training_images": 1664,
+  "training_patients": 607,
+  "test_images": 325,
+  "test_patients": 122,
+  "slice_level_metrics": {
+    "training_accuracy_avg": 76.32211538461539,
+    "training_accuracy_peak": 80.16826923076923,
+    "validation_accuracy": 76.90140845070422,
+    "test_accuracy_3_class": 72.92307692307692,
+    "balanced_accuracy": 72.63317869140938,
+    "macro_f1": 73.03471713796243,
+    "quadratic_weighted_kappa": 0.7495577856004483,
+    "binary_viability_accuracy": 84.61538461538461,
+    "binary_viability_auc": 91.82672320611957,
+    "confusion_matrix": [
+      [
+        48,
+        22,
+        0
+      ],
+      [
+        16,
+        98,
+        27
+      ],
+      [
+        0,
+        23,
+        91
+      ]
+    ]
+  },
+  "patient_level_metrics": {
+    "primary_infocus_accuracy": 72.1311475409836,
+    "primary_infocus_balanced_accuracy": 71.11111111111111,
+    "primary_infocus_binary_viability": 86.0655737704918,
+    "primary_infocus_qwk": 0.7835524942600709,
+    "clear_patient_count": 78,
+    "clear_patient_accuracy": 83.33333333333334,
+    "clear_patient_binary": 88.46153846153845
+  }
+}

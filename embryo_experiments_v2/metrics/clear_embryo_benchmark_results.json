@@ -1,0 +1,54 @@
+{
+  "dataset": "851 High-Clarity Clear Patient Embryos",
+  "protocol": "Stratified Zero Patient Data Leakage",
+  "super_ensemble_metrics": {
+    "training_accuracy_avg": 74.9176276771005,
+    "training_accuracy_peak": 88.96210873146623,
+    "validation_accuracy": 70.49180327868852,
+    "test_accuracy_3_class": 64.75409836065575,
+    "balanced_accuracy": 66.42363433667782,
+    "macro_f1": 65.3674040172896,
+    "quadratic_weighted_kappa": 0.6859892569382273,
+    "binary_viability_accuracy": 77.8688524590164,
+    "binary_viability_auc": 88.66666666666667,
+    "confusion_matrix": [
+      [
+        20,
+        6,
+        0
+      ],
+      [
+        10,
+        25,
+        11
+      ],
+      [
+        1,
+        15,
+        34
+      ]
+    ]
+  },
+  "component_models": {
+    "convnext_tiny": {
+      "train_acc": 88.96210873146623,
+      "val_acc": 66.39344262295081,
+      "test_acc": 63.934426229508205
+    },
+    "densenet121": {
+      "train_acc": 70.18121911037892,
+      "val_acc": 64.75409836065575,
+      "test_acc": 68.0327868852459
+    },
+    "resnet50": {
+      "train_acc": 61.12026359143328,
+      "val_acc": 66.39344262295081,
+      "test_acc": 64.75409836065575
+    },
+    "efficientnet_b0": {
+      "train_acc": 79.40691927512356,
+      "val_acc": 69.67213114754098,
+      "test_acc": 68.85245901639344
+    }
+  }
+}

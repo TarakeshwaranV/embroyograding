@@ -1,0 +1,18 @@
+{
+  "dataset_size": 2344,
+  "unique_patients": 851,
+  "grading_counts": {
+    "Grade-1": 558,
+    "Grade-2": 1001,
+    "Grade-3": 785
+  },
+  "grading_percentages": {
+    "Grade-1": 23.805460750853243,
+    "Grade-2": 42.70477815699659,
+    "Grade-3": 33.489761092150175
+  },
+  "concordance_with_human_embryologist_on_324_gt": {
+    "exact_3_class_match": 63.580246913580254,
+    "binary_transferable_concordance": 79.62962962962963
+  }
+}

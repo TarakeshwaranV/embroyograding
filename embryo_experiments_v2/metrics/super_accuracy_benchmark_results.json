@@ -1,0 +1,26 @@
+{
+  "slice_level_metrics": {
+    "raw_test_accuracy": 72.3076923076923,
+    "calibrated_test_accuracy": 72.3076923076923,
+    "balanced_accuracy": 72.66428482553903,
+    "binary_transferable_accuracy": 82.46153846153847,
+    "quadratic_weighted_kappa": 0.7522404241982754
+  },
+  "patient_bag_level_metrics": {
+    "patient_accuracy": 57.377049180327866,
+    "patient_balanced_accuracy": 62.24878724878725,
+    "patient_binary_accuracy": 68.85245901639344,
+    "patient_quadratic_kappa": 0.5969030476378341
+  },
+  "high_confidence_cohort_65pct": {
+    "sample_count": 131,
+    "cohort_percentage": 40.30769230769231,
+    "accuracy_3_class": 87.78625954198473,
+    "accuracy_binary": 89.31297709923665
+  },
+  "very_high_confidence_cohort_75pct": {
+    "sample_count": 76,
+    "accuracy_3_class": 94.73684210526315,
+    "accuracy_binary": 94.73684210526315
+  }
+}

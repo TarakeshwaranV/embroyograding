@@ -1,0 +1,29 @@
+{
+  "model": "EfficientNet-B0 trained on Graded Novel Patient Data",
+  "training_samples": 1665,
+  "test_samples": 324,
+  "test_accuracy": 52.160493827160494,
+  "balanced_accuracy": 53.451481037687934,
+  "macro_precision": 51.56903417137335,
+  "macro_recall": 53.451481037687934,
+  "macro_f1": 51.37619002312025,
+  "quadratic_weighted_kappa": 0.4744919831947183,
+  "macro_roc_auc": 72.57571892707747,
+  "confusion_matrix": [
+    [
+      49,
+      23,
+      15
+    ],
+    [
+      33,
+      38,
+      55
+    ],
+    [
+      9,
+      20,
+      82
+    ]
+  ]
+}

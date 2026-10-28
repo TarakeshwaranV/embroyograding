@@ -1,0 +1,89 @@
+{
+  "pipeline": "Heterogeneous Super-Ensemble (ConvNeXt-Tiny + DenseNet-121 + ResNet-50 + EfficientNet-B0)",
+  "patient_leakage": "0% (Strict StratifiedGroupKFold on patient_id)",
+  "test_cohort": {
+    "total_patients": 122,
+    "total_images": 325
+  },
+  "full_population_metrics": {
+    "accuracy_3_class": 73.53846153846155,
+    "balanced_accuracy": 73.14616328054177,
+    "macro_f1": 73.5447058030291,
+    "quadratic_weighted_kappa": 0.7488124495236772,
+    "binary_viability_accuracy": 84.3076923076923,
+    "binary_viability_auc": 92.3422299825393,
+    "confusion_matrix": [
+      [
+        47,
+        23,
+        0
+      ],
+      [
+        12,
+        96,
+        33
+      ],
+      [
+        1,
+        17,
+        96
+      ]
+    ]
+  },
+  "confidence_stratified_benchmarks": {
+    "conf_55": {
+      "threshold": 0.55,
+      "sample_count": 265,
+      "cohort_percentage": 81.53846153846153,
+      "accuracy_3_class": 78.11320754716982,
+      "balanced_accuracy": 77.60956612363556,
+      "binary_accuracy": 86.0377358490566,
+      "quadratic_weighted_kappa": 0.8105089259295789
+    },
+    "conf_60": {
+      "threshold": 0.6,
+      "sample_count": 228,
+      "cohort_percentage": 70.15384615384616,
+      "accuracy_3_class": 79.3859649122807,
+      "balanced_accuracy": 78.45939521471438,
+      "binary_accuracy": 87.71929824561403,
+      "quadratic_weighted_kappa": 0.8341176470588235
+    },
+    "conf_65": {
+      "threshold": 0.65,
+      "sample_count": 193,
+      "cohort_percentage": 59.38461538461538,
+      "accuracy_3_class": 83.41968911917098,
+      "balanced_accuracy": 82.37829236353991,
+      "binary_accuracy": 88.60103626943005,
+      "quadratic_weighted_kappa": 0.8701538979059793
+    },
+    "conf_70": {
+      "threshold": 0.7,
+      "sample_count": 159,
+      "cohort_percentage": 48.92307692307693,
+      "accuracy_3_class": 86.16352201257862,
+      "balanced_accuracy": 83.03418803418803,
+      "binary_accuracy": 90.56603773584906,
+      "quadratic_weighted_kappa": 0.900833475080796
+    },
+    "conf_75": {
+      "threshold": 0.75,
+      "sample_count": 130,
+      "cohort_percentage": 40.0,
+      "accuracy_3_class": 89.23076923076924,
+      "balanced_accuracy": 82.96296296296296,
+      "binary_accuracy": 93.84615384615384,
+      "quadratic_weighted_kappa": 0.92789794786467
+    },
+    "conf_80": {
+      "threshold": 0.8,
+      "sample_count": 106,
+      "cohort_percentage": 32.61538461538461,
+      "accuracy_3_class": 90.56603773584906,
+      "balanced_accuracy": 78.60300618921309,
+      "binary_accuracy": 94.33962264150944,
+      "quadratic_weighted_kappa": 0.9381202568593112
+    }
+  }
+}

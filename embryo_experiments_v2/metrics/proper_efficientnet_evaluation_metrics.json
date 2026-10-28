@@ -1,0 +1,38 @@
+{
+  "model": "EfficientNet-B0 Trained on Clinical Consensus Dataset",
+  "training_patients": 607,
+  "training_images": 1664,
+  "test_patients": 122,
+  "test_images": 325,
+  "held_out_test_metrics": {
+    "accuracy": 69.53846153846153,
+    "balanced_accuracy": 70.04123784638901,
+    "binary_transferable_accuracy": 80.92307692307692,
+    "macro_f1": 69.59091466223727,
+    "quadratic_weighted_kappa": 0.7325725399582754,
+    "multiclass_roc_auc": 88.09884182253569,
+    "confusion_matrix": [
+      [
+        45,
+        25,
+        0
+      ],
+      [
+        12,
+        77,
+        52
+      ],
+      [
+        0,
+        10,
+        104
+      ]
+    ]
+  },
+  "human_ground_truth_benchmark_metrics": {
+    "accuracy": 57.407407407407405,
+    "balanced_accuracy": 58.36131698200664,
+    "binary_transferable_accuracy": 76.23456790123457,
+    "quadratic_weighted_kappa": 0.5754399101460127
+  }
+}

@@ -13,11 +13,19 @@ embryo_web_deployment/
 │   ├── best_densenet121.pth
 │   ├── best_proper_efficientnet_b0.pth
 │   └── best_resnet50_full.pth
+├── result_images/                        # High-Resolution (300 DPI) Publication Figures (PNG)
+│   ├── fig1_system_architecture_block_diagram.png # Fig 1: End-to-end system block diagram
+│   ├── fig2_confusion_matrix_super_ensemble.png   # Fig 2: 325-test-slice confusion matrix
+│   ├── fig3_model_accuracy_comparison.png         # Fig 3: Benchmark comparison across models
+│   ├── fig4_gradcam_explainability_heatmaps.png   # Fig 4: Grad-CAM attention on ICM & TE
+│   ├── fig5_roc_curves_clinical_viability.png     # Fig 5: Multi-class & Viability ROC (AUC 92.3%)
+│   ├── fig6_preprocessing_pipeline_stages.png     # Fig 6: Visual 4-stage preprocessing progression
+│   └── fig7_patient_infocus_vs_slices_accuracy.png# Fig 7: In-focus vs raw slice accuracy progression
 ├── preprocessing_pipeline.py             # Image Preprocessing Library (Crop, CLAHE, Sharpness)
 ├── inference_pipeline.py                 # Ready-to-Use Prediction Engine (Super-Ensemble)
-├── About_Embryo_Grading_Project.pdf      # Detailed Project Background & Clinical Motivation
-├── Embryo_Model_Evaluation_Metrics.pdf   # Complete Benchmarks & Mathematical Zero-Leakage Proof
-├── Embryo_Image_Preprocessing_Pipeline.pdf # Step-by-Step Guide to the Image Pipeline
+├── About_Embryo_Grading_Project.pdf      # Detailed Project Background & Clinical Motivation (with Fig 1)
+├── Embryo_Model_Evaluation_Metrics.pdf   # Complete Benchmarks, Results Figures, Tables & Conclusions
+├── Embryo_Image_Preprocessing_Pipeline.pdf # Step-by-Step Guide to the Image Pipeline (with Fig 6)
 └── README_FOR_WEBSITE_DEVELOPER.md       # This Guide
 ```
 

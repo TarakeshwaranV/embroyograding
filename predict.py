@@ -50,7 +50,7 @@ def load_efficientnet(weights_path="efficientnet_embryo_best.pth", num_classes=3
     model.eval()
     return model
 
-def predict_embryo(image_path, model, device="cuda", img_size=288, use_tta=True):
+def predict_image(image, model, device="cuda", img_size=288, use_tta=True):
     classes = ["Grade-1", "Grade-2", "Grade-3"]
     base_t = transforms.Compose([
         transforms.Resize((img_size, img_size)),
@@ -58,8 +58,8 @@ def predict_embryo(image_path, model, device="cuda", img_size=288, use_tta=True)
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-    
-    img = Image.open(image_path).convert('RGB')
+
+    img = image.convert('RGB')
     
     with torch.no_grad():
         if use_tta:
@@ -79,9 +79,16 @@ def predict_embryo(image_path, model, device="cuda", img_size=288, use_tta=True)
 
         pred_idx = int(probs.argmax())
         
+    return classes[pred_idx], probs
+
+def predict_embryo(image_path, model, device="cuda", img_size=288, use_tta=True):
+    img = Image.open(image_path).convert('RGB')
+    predicted_grade, probs = predict_image(img, model, device=device, img_size=img_size, use_tta=use_tta)
+    classes = ["Grade-1", "Grade-2", "Grade-3"]
+
     print(f"\n========================================================")
     print(f"Prediction for: {image_path}")
-    print(f"Predicted Grade:  {classes[pred_idx]} (Confidence: {probs[pred_idx]*100:.2f}%)")
+    print(f"Predicted Grade:  {predicted_grade} (Confidence: {probs[classes.index(predicted_grade)]*100:.2f}%)")
     print(f"========================================================")
     print("Class Probabilities:")
     for c, p in zip(classes, probs):
@@ -89,7 +96,7 @@ def predict_embryo(image_path, model, device="cuda", img_size=288, use_tta=True)
         print(f"  {c:7s}: {p*100:6.2f}%  [{bar:<25}]")
     print(f"========================================================\n")
         
-    return classes[pred_idx], probs
+    return predicted_grade, probs
 
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
